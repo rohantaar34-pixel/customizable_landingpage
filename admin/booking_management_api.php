@@ -193,11 +193,8 @@ function sendBookingEmail($booking, $status, $customMessage)
 {
     // Load PHPMailer
     require_once __DIR__ . '/../vendor/autoload.php';
-    
-    use PHPMailer\PHPMailer\PHPMailer;
-    use PHPMailer\PHPMailer\Exception;
 
-    $mail = new PHPMailer(true);
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
 
     try {
         // Server settings
@@ -206,7 +203,7 @@ function sendBookingEmail($booking, $status, $customMessage)
         $mail->SMTPAuth   = true;
         $mail->Username   = 'rohantaar34@gmail.com'; // SMTP username
         $mail->Password   = ''; // SMTP password - should be set via environment variable
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
         // Recipients
