@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# PHP
+composer.phar
+
+# Temporary files
+tmp/
+temp/
+*.tmp
