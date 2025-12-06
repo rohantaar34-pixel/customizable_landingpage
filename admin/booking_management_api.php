@@ -188,113 +188,156 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-// Function to send email
+// Function to send email using PHPMailer
 function sendBookingEmail($booking, $status, $customMessage)
 {
-    $to = $booking['customer_email'];
-    $subject = $status === 'approved'
-        ? 'Booking Approved - In & Out Cleaning'
-        : 'Booking Update - In & Out Cleaning';
+    // Load email configuration
+    $configFile = __DIR__ . '/email_config.php';
+    if (!file_exists($configFile)) {
+        $configFile = __DIR__ . '/email_config.example.php';
+    }
+    $emailConfig = include $configFile;
+    
+    // Load PHPMailer
+    $autoloaderPath = __DIR__ . '/../vendor/autoload.php';
+    if (!file_exists($autoloaderPath)) {
+        error_log("PHPMailer autoloader not found at: {$autoloaderPath}");
+        return false;
+    }
+    require_once $autoloaderPath;
 
-    // Create email body
-    $emailBody = "
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #3c5170; color: white; padding: 20px; text-align: center; }
-            .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; }
-            .booking-details { background: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
-            .detail-row { padding: 10px 0; border-bottom: 1px solid #eee; }
-            .detail-label { font-weight: bold; color: #3c5170; }
-            .status-badge { 
-                display: inline-block;
-                padding: 5px 15px;
-                border-radius: 20px;
-                font-weight: bold;
-                margin: 10px 0;
-            }
-            .approved { background: #d1fae5; color: #065f46; }
-            .declined { background: #fee2e2; color: #991b1b; }
-            .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-        </style>
-    </head>
-    <body>
-        <div class='container'>
-            <div class='header'>
-                <h1>In & Out Cleaning Experts</h1>
-                <p>Professional Cleaning Services</p>
-            </div>
-            
-            <div class='content'>
-                <h2>Booking " . ucfirst($status) . "</h2>
-                
-                <div class='status-badge " . $status . "'>
-                    Status: " . strtoupper($status) . "
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+
+    try {
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host       = $emailConfig['smtp_host'];
+        $mail->SMTPAuth   = $emailConfig['smtp_auth'];
+        $mail->Username   = $emailConfig['smtp_username'];
+        $mail->Password   = $emailConfig['smtp_password'];
+        $mail->SMTPSecure = $emailConfig['smtp_secure'] === 'ssl' 
+            ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS 
+            : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = $emailConfig['smtp_port'];
+
+        // Skip SMTP if password is empty (for testing without actual email sending)
+        if (empty($emailConfig['smtp_password'])) {
+            error_log("Email not sent for booking {$booking['booking_ref']}: SMTP password not configured. Please set up email_config.php with valid credentials.");
+            // Return true to allow booking status update to proceed even if email fails
+            return true;
+        }
+
+        // Recipients
+        $mail->setFrom($emailConfig['from_email'], $emailConfig['from_name']);
+        $mail->addAddress($booking['customer_email'], $booking['customer_name']);
+
+        // Content
+        $mail->isHTML(true);
+        $mail->Subject = $status === 'approved'
+            ? 'Booking Approved - ' . $emailConfig['company_name']
+            : 'Booking Update - ' . $emailConfig['company_name'];
+
+        // Create email body
+        $emailBody = "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #3c5170; color: white; padding: 20px; text-align: center; }
+                .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; }
+                .booking-details { background: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+                .detail-row { padding: 10px 0; border-bottom: 1px solid #eee; }
+                .detail-label { font-weight: bold; color: #3c5170; }
+                .status-badge { 
+                    display: inline-block;
+                    padding: 5px 15px;
+                    border-radius: 20px;
+                    font-weight: bold;
+                    margin: 10px 0;
+                }
+                .approved { background: #d1fae5; color: #065f46; }
+                .declined { background: #fee2e2; color: #991b1b; }
+                .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>" . htmlspecialchars($emailConfig['company_name']) . "</h1>
+                    <p>" . htmlspecialchars($emailConfig['company_tagline']) . "</p>
                 </div>
                 
-                <p>" . nl2br(htmlspecialchars($customMessage)) . "</p>
-                
-                <div class='booking-details'>
-                    <h3>Booking Details</h3>
-                    <div class='detail-row'>
-                        <span class='detail-label'>Booking Reference:</span> 
-                        " . htmlspecialchars($booking['booking_ref']) . "
+                <div class='content'>
+                    <h2>Booking " . ucfirst($status) . "</h2>
+                    
+                    <div class='status-badge " . $status . "'>
+                        Status: " . strtoupper($status) . "
                     </div>
-                    <div class='detail-row'>
-                        <span class='detail-label'>Customer Name:</span> 
-                        " . htmlspecialchars($booking['customer_name']) . "
+                    
+                    <p>" . nl2br(htmlspecialchars($customMessage)) . "</p>
+                    
+                    <div class='booking-details'>
+                        <h3>Booking Details</h3>
+                        <div class='detail-row'>
+                            <span class='detail-label'>Booking Reference:</span> 
+                            " . htmlspecialchars($booking['booking_ref']) . "
+                        </div>
+                        <div class='detail-row'>
+                            <span class='detail-label'>Customer Name:</span> 
+                            " . htmlspecialchars($booking['customer_name']) . "
+                        </div>
+                        <div class='detail-row'>
+                            <span class='detail-label'>Service:</span> 
+                            " . htmlspecialchars($booking['service']) . "
+                        </div>
+                        <div class='detail-row'>
+                            <span class='detail-label'>Scheduled Time:</span> 
+                            " . htmlspecialchars($booking['booking_time']) . "
+                        </div>
+                        <div class='detail-row'>
+                            <span class='detail-label'>Amount:</span> 
+                            $" . number_format($booking['price'], 2) . "
+                        </div>
+                        <div class='detail-row'>
+                            <span class='detail-label'>Address:</span> 
+                            " . htmlspecialchars($booking['customer_address']) . ", 
+                            " . htmlspecialchars($booking['customer_city']) . ", 
+                            " . htmlspecialchars($booking['customer_state']) . " 
+                            " . htmlspecialchars($booking['customer_zip']) . "
+                        </div>
                     </div>
-                    <div class='detail-row'>
-                        <span class='detail-label'>Service:</span> 
-                        " . htmlspecialchars($booking['service']) . "
-                    </div>
-                    <div class='detail-row'>
-                        <span class='detail-label'>Scheduled Time:</span> 
-                        " . htmlspecialchars($booking['booking_time']) . "
-                    </div>
-                    <div class='detail-row'>
-                        <span class='detail-label'>Amount:</span> 
-                        $" . number_format($booking['price'], 2) . "
-                    </div>
-                    <div class='detail-row'>
-                        <span class='detail-label'>Address:</span> 
-                        " . htmlspecialchars($booking['customer_address']) . ", 
-                        " . htmlspecialchars($booking['customer_city']) . ", 
-                        " . htmlspecialchars($booking['customer_state']) . " 
-                        " . htmlspecialchars($booking['customer_zip']) . "
-                    </div>
+                    
+                    " . ($status === 'approved'
+                ? "<p><strong>Next Steps:</strong> Our team will contact you within 24 hours to confirm all details and schedule your service.</p>"
+                : "<p>If you have any questions or would like to reschedule, please don't hesitate to contact us.</p>") . "
+                    
+                    <p>
+                        <strong>Contact Us:</strong><br>
+                        Email: " . htmlspecialchars($emailConfig['contact_email']) . "<br>
+                        Phone: " . htmlspecialchars($emailConfig['contact_phone']) . "
+                    </p>
                 </div>
                 
-                " . ($status === 'approved'
-            ? "<p><strong>Next Steps:</strong> Our team will contact you within 24 hours to confirm all details and schedule your service.</p>"
-            : "<p>If you have any questions or would like to reschedule, please don't hesitate to contact us.</p>") . "
-                
-                <p>
-                    <strong>Contact Us:</strong><br>
-                    Email: rohantaar34@gmail.com<br>
-                    Phone: 09352632690
-                </p>
+                <div class='footer'>
+                    <p>&copy; 2025 " . htmlspecialchars($emailConfig['company_name']) . ". All rights reserved.</p>
+                    <p>Thank you for choosing our services!</p>
+                </div>
             </div>
-            
-            <div class='footer'>
-                <p>&copy; 2025 In & Out Cleaning Experts. All rights reserved.</p>
-                <p>Thank you for choosing our services!</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    ";
+        </body>
+        </html>
+        ";
 
-    // Email headers
-    $headers = "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    $headers .= "From: In & Out Cleaning <rohantaar34@gmail.com>" . "\r\n";
+        $mail->Body = $emailBody;
+        $mail->AltBody = strip_tags($emailBody);
 
-    // Send email
-    return mail($to, $subject, $emailBody, $headers);
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        error_log("Email sending failed: {$mail->ErrorInfo}");
+        return false;
+    }
 }
 
 // Invalid request
