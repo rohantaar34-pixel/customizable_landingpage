@@ -18,18 +18,18 @@ return [
     'smtp_secure' => 'tls', // 'tls' or 'ssl'
     'smtp_auth' => true,
     
-    // SMTP Authentication
+    // From Address
     // IMPORTANT: Replace these with actual credentials or use environment variables
-    'smtp_username' => getenv('SMTP_USERNAME') ?: 'your-email@gmail.com',
+    'smtp_username' => getenv('SMTP_USERNAME') ?: 'your-email@example.com',
     'smtp_password' => getenv('SMTP_PASSWORD') ?: '', // Set via environment variable
     
     // From Address
-    'from_email' => getenv('FROM_EMAIL') ?: 'rohantaar34@gmail.com',
+    'from_email' => getenv('FROM_EMAIL') ?: 'noreply@example.com',
     'from_name' => 'In & Out Cleaning Experts',
     
     // Contact Information (displayed in emails)
-    'contact_email' => 'rohantaar34@gmail.com',
-    'contact_phone' => '09352632690',
+    'contact_email' => 'contact@example.com',
+    'contact_phone' => '0000000000',
     
     // Company Information
     'company_name' => 'In & Out Cleaning Experts',

@@ -199,7 +199,12 @@ function sendBookingEmail($booking, $status, $customMessage)
     $emailConfig = include $configFile;
     
     // Load PHPMailer
-    require_once __DIR__ . '/../vendor/autoload.php';
+    $autoloaderPath = __DIR__ . '/../vendor/autoload.php';
+    if (!file_exists($autoloaderPath)) {
+        error_log("PHPMailer autoloader not found at: {$autoloaderPath}");
+        return false;
+    }
+    require_once $autoloaderPath;
 
     $mail = new PHPMailer\PHPMailer\PHPMailer(true);
 
@@ -217,8 +222,9 @@ function sendBookingEmail($booking, $status, $customMessage)
 
         // Skip SMTP if password is empty (for testing without actual email sending)
         if (empty($emailConfig['smtp_password'])) {
-            error_log("Email sending skipped: SMTP password not configured");
-            return false;
+            error_log("Email not sent for booking {$booking['booking_ref']}: SMTP password not configured. Please set up email_config.php with valid credentials.");
+            // Return true to allow booking status update to proceed even if email fails
+            return true;
         }
 
         // Recipients

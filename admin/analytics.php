@@ -92,13 +92,17 @@ $conn = conn();
                 <!-- Revenue Trend Chart -->
                 <div class="bg-white rounded-xl shadow-md p-6">
                     <h3 class="text-xl font-semibold text-[#3c5170] mb-4">Monthly Revenue Trend</h3>
-                    <canvas id="revenueChart"></canvas>
+                    <div style="height: 300px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
                 </div>
 
                 <!-- Status Distribution Chart -->
                 <div class="bg-white rounded-xl shadow-md p-6">
                     <h3 class="text-xl font-semibold text-[#3c5170] mb-4">Booking Status Distribution</h3>
-                    <canvas id="statusChart"></canvas>
+                    <div style="height: 300px;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -332,7 +336,7 @@ function createCharts(charts) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: true,
@@ -373,7 +377,7 @@ function createCharts(charts) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: true,
@@ -518,13 +522,13 @@ function confirmBookingAction() {
                 icon: 'success',
                 title: 'Success!',
                 text: data.message,
-                timer: 2000
+                timer: 1500
             });
             
             // Reload data
             setTimeout(() => {
                 loadAnalyticsData();
-            }, 2000);
+            }, 1500);
         } else {
             Swal.fire({
                 icon: 'error',
