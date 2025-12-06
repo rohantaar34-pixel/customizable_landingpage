@@ -1,0 +1,192 @@
+/* ========== Root Theme Colors ========== */
+:root {
+  --color-primary: #3c5170; /* deep blue-gray */
+  --color-accent: #fbb06b; /* warm peach-orange */
+  --scrollbar-thumb: #1e3a8a;
+  --scrollbar-thumb-hover: #1e40af;
+}
+
+.c-text {
+  font-size: 81%;
+}
+
+.btn-main {
+  background: linear-gradient(to right, #b28b6c, #f4c49a);
+}
+
+.image-footer-logo {
+  width: 189px;
+}
+
+/* ========== Custom Scrollbar ========== */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* Firefox support */
+/* Firefox support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+/* Define duotone colors */
+:root {
+  --scrollbar-thumb: #3c5170;
+  --duotone-dark: #1e293b; /* dark navy */
+  --duotone-light: #fbb06b; /* golden accent */
+}
+
+/* Apply duotone background to the entire page */
+body {
+  min-height: 100vh;
+  color: #000;
+
+  /* Duotone base background */
+  background: linear-gradient(
+      -33deg,
+      rgba(60, 81, 112, 0.75),
+      rgba(253, 253, 253, 0.45)
+    ),
+    url("../images/veranda.png");
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  /* Smooth duotone transition */
+  animation: gradientShift 18s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+/* Optional: subtle overlay blend effect */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(60, 81, 112, 0.6),
+    rgba(251, 176, 107, 0.3)
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ========== Fancy Custom Cursor ========== */
+.cursor {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s ease, width 0.25s ease, height 0.25s ease,
+    background-color 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
+  z-index: 9999;
+  mix-blend-mode: difference;
+}
+
+/* Hide cursor on mobile/touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .cursor {
+    display: none;
+  }
+}
+
+/* Grow effect when hovering interactive elements */
+.cursor.active {
+  width: 40px;
+  height: 40px;
+  background-color: var(--color-accent);
+  border-color: var(--color-primary);
+}
+
+/* Pulse effect on click */
+.cursor.click {
+  animation: cursorClick 0.3s ease;
+}
+
+@keyframes cursorClick {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Target the circle element - adjust selector as needed */
+.hero-section > * {
+  position: relative;
+  z-index: 10; /* Ensure all direct children are above background elements */
+}
+
+/* If the circle has a specific class, target it directly */
+.decorative-circle {
+  z-index: -1 !important;
+}
+.hero-section::before {
+  content: "";
+  position: absolute;
+  background: #3c5170;
+  opacity: 0.6; /* 👈 adjust between 0 (invisible) and 1 (fully opaque) */
+  z-index: 1;
+  transition: all 0.5s ease;
+}
+
+/* Desktop: curve on the right side */
+@media (min-width: 768px) {
+  .hero-section::before {
+    top: 0;
+    right: 0;
+    width: 60%;
+    height: 100%;
+    z-index: 1;
+    clip-path: ellipse(70% 100% at right center);
+  }
+}
+
+/* Mobile: curve at the bottom */
+@media (max-width: 767px) {
+  .hero-section::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    z-index: 1;
+    clip-path: ellipse(100% 90% at bottom center);
+    background: #a0846d;
+    opacity: 1;
+    z-index: -1; /* keeps it behind the main content */
+  }
+}

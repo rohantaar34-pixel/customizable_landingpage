@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@theme {
+  --font-main: "Cal Sans", sans-serif;
+  --font-secondary: "Montserrat", sans-serif;
+  --font-title: "Berkshire Swash", serif;
+}
