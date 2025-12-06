@@ -2,6 +2,9 @@
 node_modules/
 vendor/
 
+# Configuration files with sensitive data
+admin/email_config.php
+
 # Build artifacts
 *.log
 

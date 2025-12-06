@@ -191,6 +191,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Function to send email using PHPMailer
 function sendBookingEmail($booking, $status, $customMessage)
 {
+    // Load email configuration
+    $configFile = __DIR__ . '/email_config.php';
+    if (!file_exists($configFile)) {
+        $configFile = __DIR__ . '/email_config.example.php';
+    }
+    $emailConfig = include $configFile;
+    
     // Load PHPMailer
     require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -199,22 +206,30 @@ function sendBookingEmail($booking, $status, $customMessage)
     try {
         // Server settings
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com'; // Set your SMTP server
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'rohantaar34@gmail.com'; // SMTP username
-        $mail->Password   = ''; // SMTP password - should be set via environment variable
-        $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
+        $mail->Host       = $emailConfig['smtp_host'];
+        $mail->SMTPAuth   = $emailConfig['smtp_auth'];
+        $mail->Username   = $emailConfig['smtp_username'];
+        $mail->Password   = $emailConfig['smtp_password'];
+        $mail->SMTPSecure = $emailConfig['smtp_secure'] === 'ssl' 
+            ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS 
+            : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = $emailConfig['smtp_port'];
+
+        // Skip SMTP if password is empty (for testing without actual email sending)
+        if (empty($emailConfig['smtp_password'])) {
+            error_log("Email sending skipped: SMTP password not configured");
+            return false;
+        }
 
         // Recipients
-        $mail->setFrom('rohantaar34@gmail.com', 'In & Out Cleaning');
+        $mail->setFrom($emailConfig['from_email'], $emailConfig['from_name']);
         $mail->addAddress($booking['customer_email'], $booking['customer_name']);
 
         // Content
         $mail->isHTML(true);
         $mail->Subject = $status === 'approved'
-            ? 'Booking Approved - In & Out Cleaning'
-            : 'Booking Update - In & Out Cleaning';
+            ? 'Booking Approved - ' . $emailConfig['company_name']
+            : 'Booking Update - ' . $emailConfig['company_name'];
 
         // Create email body
         $emailBody = "
@@ -244,8 +259,8 @@ function sendBookingEmail($booking, $status, $customMessage)
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>In & Out Cleaning Experts</h1>
-                    <p>Professional Cleaning Services</p>
+                    <h1>" . htmlspecialchars($emailConfig['company_name']) . "</h1>
+                    <p>" . htmlspecialchars($emailConfig['company_tagline']) . "</p>
                 </div>
                 
                 <div class='content'>
@@ -294,13 +309,13 @@ function sendBookingEmail($booking, $status, $customMessage)
                     
                     <p>
                         <strong>Contact Us:</strong><br>
-                        Email: rohantaar34@gmail.com<br>
-                        Phone: 09352632690
+                        Email: " . htmlspecialchars($emailConfig['contact_email']) . "<br>
+                        Phone: " . htmlspecialchars($emailConfig['contact_phone']) . "
                     </p>
                 </div>
                 
                 <div class='footer'>
-                    <p>&copy; 2025 In & Out Cleaning Experts. All rights reserved.</p>
+                    <p>&copy; 2025 " . htmlspecialchars($emailConfig['company_name']) . ". All rights reserved.</p>
                     <p>Thank you for choosing our services!</p>
                 </div>
             </div>
